@@ -46,9 +46,7 @@ UART_HandleTypeDef huart1;
 osThreadId defaultTaskHandle;
 osThreadId myTask02Handle;
 /* USER CODE BEGIN PV */
-static StackType_t g_pucStackofLightTask[128];
-static StaticTask_t g_TCBofLightTask;
-static TaskHandle_t xLightTaskHandle;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,7 +55,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 void StartDefaultTask(void const * argument);
 void StartTask02(void const * argument);
-void Led_Test(void const * argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -120,10 +118,10 @@ int main(void)
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-xLightTaskHandle=xTaskCreateStatic(Led_Test,"LightTask",128,NULL,osPriorityNormal,g_pucStackofLightTask,&g_TCBofLightTask);
+
   /* definition and creation of myTask02 */
-//  osThreadDef(myTask02, StartTask02, osPriorityIdle, 0, 128);
-//  myTask02Handle = osThreadCreate(osThread(myTask02), NULL);
+  osThreadDef(myTask02, StartTask02, osPriorityIdle, 0, 128);
+  myTask02Handle = osThreadCreate(osThread(myTask02), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -227,11 +225,22 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA0 PA1 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
@@ -267,21 +276,14 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	
-    osDelay(1);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+    osDelay(500);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+    osDelay(500);
   }
   /* USER CODE END 5 */
 }
-void Led_Test(void const * argument)
-{
-for(;;)
-  {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-    osDelay(500);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-    osDelay(500);
-  }
-}
+
 /* USER CODE BEGIN Header_StartTask02 */
 /**
 * @brief Function implementing the myTask02 thread.
@@ -289,16 +291,16 @@ for(;;)
 * @retval None
 */
 /* USER CODE END Header_StartTask02 */
-//void StartTask02(void const * argument)
-//{
-//  /* USER CODE BEGIN StartTask02 */
+void StartTask02(void const * argument)
+{
+  /* USER CODE BEGIN StartTask02 */
 //  /* Infinite loop */
 //  for(;;)
 //  {
 //    osDelay(1);
 //  }
-//  /* USER CODE END StartTask02 */
-//}
+  /* USER CODE END StartTask02 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
